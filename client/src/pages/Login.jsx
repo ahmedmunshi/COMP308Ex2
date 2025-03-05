@@ -1,35 +1,40 @@
 import { useState } from "react";
 
-export default function LoginPage() {
+export default function LoginPage({ onLogin }) {
   const [activeTab, setActiveTab] = useState("login");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
-  const [isAdmin, setIsAdmin] = useState(false);
   const [role, setRole] = useState("member");
   const [error, setError] = useState("");
 
-  const handleLoginSubmit = (e) => {
+  function handleLoginSubmit(e) {
     e.preventDefault();
     if (!username || !password) {
       setError("Please enter both username and password");
       return;
     }
 
-    console.log("Login attempt:", { username, password, isAdmin });
+    // In a real app, you would validate credentials with a backend
+    // For demo, just check if admin is in the username
+    const isAdmin = username.toLowerCase().includes("admin");
+    onLogin(username, password, isAdmin);
     setError("");
-  };
+  }
 
-  const handleSignupSubmit = (e) => {
+  function handleSignupSubmit(e) {
     e.preventDefault();
     if (!username || !password || !email) {
       setError("Please fill in all required fields");
       return;
     }
 
-    console.log("Signup attempt:", { username, email, password, role });
+    // In a real app, you would register the user with a backend
+    // For demo, just log in as the role they selected
+    const isAdmin = role === "admin";
+    onLogin(username, password, isAdmin);
     setError("");
-  };
+  }
 
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-64px)]">
@@ -73,7 +78,7 @@ export default function LoginPage() {
               />
             </div>
 
-            <div className="mb-4">
+            <div className="mb-6">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="login-password">
                 Password
               </label>
@@ -85,18 +90,6 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
               />
-            </div>
-
-            <div className="mb-6">
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  className="mr-2"
-                  checked={isAdmin}
-                  onChange={(e) => setIsAdmin(e.target.checked)}
-                />
-                <span className="text-gray-700">Login as Administrator</span>
-              </label>
             </div>
 
             <button

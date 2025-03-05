@@ -1,6 +1,6 @@
-import TeamDetails from "../pages/TeamDetails";
-import ProjectList from "../pages/ProjectList";
-import ProjectStatusUpdate from "../pages/ProjectStatusUpdate";
+import TeamDetails from "../components/TeamDetails";
+import ProjectList from "../components/ProjectList";
+import ProjectStatusUpdate from "../components/ProjectStatusUpdate";
 
 export default function TeamMemberDashboard() {
   return (
