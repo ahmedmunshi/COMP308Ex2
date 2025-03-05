@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 export default function Navbar() {
   const [showMenu, setShowMenu] = useState(false);
@@ -9,13 +10,15 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Team logo  */}
           <div className="flex items-center">
-            <span className="text-xl font-bold">TeamSync</span>
+            <Link to="/" className="text-2xl font-bold hover:text-gray-300">
+              TeamSync
+            </Link>
           </div>
 
           {/* Desktop view links  */}
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-4">
-              <a href="#" className="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700">
+              <a href="#" className="px-3 py-2 rounded-md text-lg font-medium hover:bg-gray-700">
                 Login
               </a>
             </div>
