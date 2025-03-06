@@ -1,19 +1,18 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@apollo/client";
-import {
-  GET_TEAMS,
-  GET_PROJECTS,
-  GET_USERS,
-  CREATE_TEAM,
-  CREATE_PROJECT,
-  DELETE_TEAM,
-  DELETE_PROJECT,
-  DELETE_USER,
-} from "../graphql/operations";
+import { GET_TEAMS, GET_PROJECTS, GET_USERS, DELETE_TEAM, DELETE_PROJECT, DELETE_USER } from "../graphql/operations";
+import TeamForm from "../components/TeamForm";
+import TeamEditForm from "../components/TeamEditForm";
+import ProjectForm from "../components/ProjectForm";
+import ProjectEditForm from "../components/ProjectEditForm";
 
 export default function AdminDashboard() {
   // Manage selection of teams, projects, and users
   const [activeTab, setActiveTab] = useState("teams");
+  const [showTeamForm, setShowTeamForm] = useState(false);
+  const [showProjectForm, setShowProjectForm] = useState(false);
+  const [teamToEdit, setTeamToEdit] = useState(null);
+  const [projectToEdit, setProjectToEdit] = useState(null);
 
   // Queries for stats
   const { data: teamsData } = useQuery(GET_TEAMS);
@@ -61,11 +60,54 @@ export default function AdminDashboard() {
         </div>
       </div>
 
+      {/* Team Form Modal */}
+      {showTeamForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="max-w-2xl w-full">
+            <TeamForm onClose={() => setShowTeamForm(false)} />
+          </div>
+        </div>
+      )}
+
+      {/* Project Form Modal */}
+      {showProjectForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="max-w-2xl w-full">
+            <ProjectForm onClose={() => setShowProjectForm(false)} />
+          </div>
+        </div>
+      )}
+
+      {/* Team Edit Form Modal */}
+      {teamToEdit && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="max-w-2xl w-full">
+            <TeamEditForm team={teamToEdit} onClose={() => setTeamToEdit(null)} />
+          </div>
+        </div>
+      )}
+
+      {/* Project Edit Form Modal */}
+      {projectToEdit && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="max-w-2xl w-full">
+            <ProjectEditForm project={projectToEdit} onClose={() => setProjectToEdit(null)} />
+          </div>
+        </div>
+      )}
+
       {/* Tab Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          {activeTab === "teams" && <TeamManagement />}
-          {activeTab === "projects" && <ProjectManagement />}
+          {activeTab === "teams" && (
+            <TeamManagement onAddTeam={() => setShowTeamForm(true)} onEditTeam={(team) => setTeamToEdit(team)} />
+          )}
+          {activeTab === "projects" && (
+            <ProjectManagement
+              onAddProject={() => setShowProjectForm(true)}
+              onEditProject={(project) => setProjectToEdit(project)}
+            />
+          )}
           {activeTab === "users" && <UserManagement />}
         </div>
         <div>
@@ -73,13 +115,19 @@ export default function AdminDashboard() {
             <h2 className="text-xl font-bold text-gray-800 mb-4">Quick Actions</h2>
             <div className="space-y-3">
               <button
-                onClick={() => setActiveTab("teams")}
+                onClick={() => {
+                  setActiveTab("teams");
+                  setShowTeamForm(true);
+                }}
                 className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition"
               >
                 Create New Team
               </button>
               <button
-                onClick={() => setActiveTab("projects")}
+                onClick={() => {
+                  setActiveTab("projects");
+                  setShowProjectForm(true);
+                }}
                 className="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 transition"
               >
                 Create New Project
@@ -124,7 +172,7 @@ export default function AdminDashboard() {
 }
 
 // Team Management Component
-function TeamManagement() {
+function TeamManagement({ onAddTeam, onEditTeam }) {
   const { loading, error, data } = useQuery(GET_TEAMS);
   const [deleteTeam] = useMutation(DELETE_TEAM, {
     refetchQueries: [{ query: GET_TEAMS }],
@@ -149,7 +197,10 @@ function TeamManagement() {
     <div className="bg-white shadow rounded-lg p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-gray-800">Team Management</h2>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 transition">
+        <button
+          onClick={onAddTeam}
+          className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 transition"
+        >
           Add New Team
         </button>
       </div>
@@ -218,7 +269,9 @@ function TeamManagement() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{team.members?.length || 0}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{team.expertiseLevel || "N/A"}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button className="text-blue-600 hover:text-blue-900 mr-4">Edit</button>
+                    <button className="text-blue-600 hover:text-blue-900 mr-4" onClick={() => onEditTeam(team)}>
+                      Edit
+                    </button>
                     <button className="text-red-600 hover:text-red-900" onClick={() => handleDeleteTeam(team.id)}>
                       Delete
                     </button>
@@ -236,7 +289,7 @@ function TeamManagement() {
 }
 
 // Project Management Component
-function ProjectManagement() {
+function ProjectManagement({ onAddProject, onEditProject }) {
   const { loading, error, data } = useQuery(GET_PROJECTS);
   const [deleteProject] = useMutation(DELETE_PROJECT, {
     refetchQueries: [{ query: GET_PROJECTS }],
@@ -274,7 +327,10 @@ function ProjectManagement() {
     <div className="bg-white shadow rounded-lg p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-gray-800">Project Management</h2>
-        <button className="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700 transition">
+        <button
+          onClick={onAddProject}
+          className="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700 transition"
+        >
           Add New Project
         </button>
       </div>
@@ -336,7 +392,9 @@ function ProjectManagement() {
                     {project.endDate ? new Date(project.endDate).toLocaleDateString() : "Not set"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button className="text-blue-600 hover:text-blue-900 mr-4">Edit</button>
+                    <button className="text-blue-600 hover:text-blue-900 mr-4" onClick={() => onEditProject(project)}>
+                      Edit
+                    </button>
                     <button className="text-red-600 hover:text-red-900" onClick={() => handleDeleteProject(project.id)}>
                       Delete
                     </button>
