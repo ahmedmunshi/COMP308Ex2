@@ -1,25 +1,52 @@
 import { useState } from "react";
+import { useMutation } from "@apollo/client";
+import { LOGIN, REGISTER } from "../graphql/operations";
 
 export default function LoginPage({ onLogin }) {
   const [activeTab, setActiveTab] = useState("login");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState("member");
+  const [role, setRole] = useState("Member");
   const [error, setError] = useState("");
+
+  // Login mutation
+  const [login, { loading: loginLoading }] = useMutation(LOGIN, {
+    onCompleted: (data) => {
+      // Store token in localStorage
+      localStorage.setItem("token", data.login.token);
+      onLogin(data.login.user.username, data.login.user.role === "Admin");
+    },
+    onError: (error) => {
+      setError(error.message);
+    },
+  });
+
+  // Register mutation
+  const [register, { loading: registerLoading }] = useMutation(REGISTER, {
+    onCompleted: (data) => {
+      // Store token in localStorage
+      localStorage.setItem("token", data.register.token);
+      onLogin(data.register.user.username, data.register.user.role === "Admin");
+    },
+    onError: (error) => {
+      setError(error.message);
+    },
+  });
 
   function handleLoginSubmit(e) {
     e.preventDefault();
-    if (!username || !password) {
-      setError("Please enter both username and password");
+    if (!email || !password) {
+      setError("Please enter both email and password");
       return;
     }
 
-    // In a real app, you would validate credentials with a backend
-    // For demo, just check if admin is in the username
-    const isAdmin = username.toLowerCase().includes("admin");
-    onLogin(username, password, isAdmin);
-    setError("");
+    login({
+      variables: {
+        email,
+        password,
+      },
+    });
   }
 
   function handleSignupSubmit(e) {
@@ -29,11 +56,14 @@ export default function LoginPage({ onLogin }) {
       return;
     }
 
-    // In a real app, you would register the user with a backend
-    // For demo, just log in as the role they selected
-    const isAdmin = role === "admin";
-    onLogin(username, password, isAdmin);
-    setError("");
+    register({
+      variables: {
+        username,
+        email,
+        password,
+        role,
+      },
+    });
   }
 
   return (
@@ -65,16 +95,16 @@ export default function LoginPage({ onLogin }) {
         {activeTab === "login" && (
           <form onSubmit={handleLoginSubmit}>
             <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="login-username">
-                Username
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="login-email">
+                Email
               </label>
               <input
                 className="border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                id="login-username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter your username"
+                id="login-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
               />
             </div>
 
@@ -95,8 +125,9 @@ export default function LoginPage({ onLogin }) {
             <button
               className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full transition duration-200"
               type="submit"
+              disabled={loginLoading}
             >
-              Sign In
+              {loginLoading ? "Signing in..." : "Sign In"}
             </button>
           </form>
         )}
@@ -153,9 +184,9 @@ export default function LoginPage({ onLogin }) {
                   <input
                     type="radio"
                     name="role"
-                    value="member"
-                    checked={role === "member"}
-                    onChange={() => setRole("member")}
+                    value="Member"
+                    checked={role === "Member"}
+                    onChange={() => setRole("Member")}
                     className="mr-2"
                   />
                   <span className="text-gray-700">Team Member</span>
@@ -164,9 +195,9 @@ export default function LoginPage({ onLogin }) {
                   <input
                     type="radio"
                     name="role"
-                    value="admin"
-                    checked={role === "admin"}
-                    onChange={() => setRole("admin")}
+                    value="Admin"
+                    checked={role === "Admin"}
+                    onChange={() => setRole("Admin")}
                     className="mr-2"
                   />
                   <span className="text-gray-700">Administrator</span>
@@ -177,8 +208,9 @@ export default function LoginPage({ onLogin }) {
             <button
               className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full transition duration-200"
               type="submit"
+              disabled={registerLoading}
             >
-              Create Account
+              {registerLoading ? "Creating Account..." : "Create Account"}
             </button>
           </form>
         )}

@@ -1,31 +1,27 @@
 import { useState } from "react";
+import { useQuery, useMutation } from "@apollo/client";
+import { GET_PROJECTS, UPDATE_PROJECT_STATUS } from "../graphql/operations";
 
 export default function ProjectStatusUpdate() {
-  const [projects, setProjects] = useState([
-    {
-      id: "1",
-      name: "Website Redesign",
-      status: "In Progress",
-    },
-    {
-      id: "2",
-      name: "Mobile App Development",
-      status: "Pending",
-    },
-    {
-      id: "3",
-      name: "Customer Dashboard",
-      status: "Completed",
-    },
-  ]);
-
   const [selectedProject, setSelectedProject] = useState("");
   const [newStatus, setNewStatus] = useState("");
   const [statusUpdated, setStatusUpdated] = useState(false);
 
+  // Fetch projects
+  const { loading, error, data } = useQuery(GET_PROJECTS);
+
+  // Update project status mutation
+  const [updateProjectStatus, { loading: updateLoading }] = useMutation(UPDATE_PROJECT_STATUS, {
+    onCompleted: () => {
+      setStatusUpdated(true);
+      setTimeout(() => setStatusUpdated(false), 3000); // Clear message after 3 seconds
+    },
+    refetchQueries: [{ query: GET_PROJECTS }],
+  });
+
   const handleProjectChange = (e) => {
     setSelectedProject(e.target.value);
-    const project = projects.find((p) => p.id === e.target.value);
+    const project = data?.projects.find((p) => p.id === e.target.value);
     if (project) {
       setNewStatus(project.status);
     }
@@ -40,15 +36,32 @@ export default function ProjectStatusUpdate() {
     e.preventDefault();
     if (!selectedProject || !newStatus) return;
 
-    // Update the project status in our local state
-    setProjects(
-      projects.map((project) => (project.id === selectedProject ? { ...project, status: newStatus } : project))
+    updateProjectStatus({
+      variables: {
+        id: selectedProject,
+        status: newStatus,
+      },
+    });
+  };
+
+  if (loading) return <div className="bg-white shadow rounded-lg p-6">Loading projects...</div>;
+
+  if (error)
+    return (
+      <div className="bg-white shadow rounded-lg p-6">
+        <p className="text-red-500">Error loading projects: {error.message}</p>
+      </div>
     );
 
-    setStatusUpdated(true);
-
-    // This would be where we submit to the API in a real implementation
-  };
+  // If no projects are available
+  if (!data || !data.projects || data.projects.length === 0) {
+    return (
+      <div className="bg-white shadow rounded-lg p-6">
+        <h2 className="text-2xl font-bold text-gray-800 mb-6">Update Project Status</h2>
+        <p className="text-gray-500">No projects available to update.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white shadow rounded-lg p-6">
@@ -67,7 +80,7 @@ export default function ProjectStatusUpdate() {
             required
           >
             <option value="">-- Select a project --</option>
-            {projects.map((project) => (
+            {data.projects.map((project) => (
               <option key={project.id} value={project.id}>
                 {project.name}
               </option>
@@ -96,12 +109,14 @@ export default function ProjectStatusUpdate() {
 
         <button
           type="submit"
-          disabled={!selectedProject}
+          disabled={!selectedProject || updateLoading}
           className={`px-4 py-2 rounded-md font-medium ${
-            !selectedProject ? "bg-gray-300 cursor-not-allowed" : "bg-blue-600 text-white hover:bg-blue-700"
+            !selectedProject || updateLoading
+              ? "bg-gray-300 cursor-not-allowed"
+              : "bg-blue-600 text-white hover:bg-blue-700"
           }`}
         >
-          Update Status
+          {updateLoading ? "Updating..." : "Update Status"}
         </button>
 
         {statusUpdated && (

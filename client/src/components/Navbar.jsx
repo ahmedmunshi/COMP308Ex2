@@ -1,10 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
-export default function Navbar() {
+export default function Navbar({ isLoggedIn, isAdmin, username, onLogout }) {
   const [showMenu, setShowMenu] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // For demo purposes
-  const [isAdmin, setIsAdmin] = useState(true); // For demo purposes
 
   return (
     <nav className="bg-gray-800 text-white">
@@ -22,6 +20,8 @@ export default function Navbar() {
             <div className="ml-10 flex items-baseline space-x-4">
               {isLoggedIn ? (
                 <>
+                  <span className="px-3 py-2 rounded-md text-lg font-medium text-gray-300">Welcome, {username}</span>
+
                   {isAdmin ? (
                     <Link to="/admin-dashboard" className="px-3 py-2 rounded-md text-lg font-medium hover:bg-gray-700">
                       Admin Dashboard
@@ -31,10 +31,7 @@ export default function Navbar() {
                       Member Dashboard
                     </Link>
                   )}
-                  <button
-                    onClick={() => setIsLoggedIn(false)}
-                    className="px-3 py-2 rounded-md text-lg font-medium hover:bg-gray-700"
-                  >
+                  <button onClick={onLogout} className="px-3 py-2 rounded-md text-lg font-medium hover:bg-gray-700">
                     Logout
                   </button>
                 </>
@@ -71,6 +68,10 @@ export default function Navbar() {
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
           {isLoggedIn ? (
             <>
+              <span className="block px-3 py-2 rounded-md text-base font-medium text-gray-300">
+                Welcome, {username}
+              </span>
+
               {isAdmin ? (
                 <Link
                   to="/admin-dashboard"
@@ -87,7 +88,7 @@ export default function Navbar() {
                 </Link>
               )}
               <button
-                onClick={() => setIsLoggedIn(false)}
+                onClick={onLogout}
                 className="block w-full text-left px-3 py-2 rounded-md text-base font-medium hover:bg-gray-700"
               >
                 Logout
