@@ -41,7 +41,7 @@ export default function TeamEditForm({ team, onClose }) {
         status,
         teamSlogan,
         expertiseLevel,
-        members,
+        members, // Added members to the variables
       },
     });
   };

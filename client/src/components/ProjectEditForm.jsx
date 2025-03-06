@@ -2,17 +2,28 @@ import { useState } from "react";
 import { useMutation, useQuery } from "@apollo/client";
 import { UPDATE_PROJECT, GET_PROJECTS, GET_TEAMS } from "../graphql/operations";
 
+// Helper function to safely format dates
+const formatDate = (dateString) => {
+  if (!dateString) return "";
+
+  try {
+    const date = new Date(dateString);
+    // Check if date is valid before converting to ISO string
+    if (isNaN(date.getTime())) return "";
+
+    return date.toISOString().split("T")[0];
+  } catch (error) {
+    console.error("Error formatting date:", error);
+    return "";
+  }
+};
+
 export default function ProjectEditForm({ project, onClose }) {
   const [name, setName] = useState(project.name);
   const [description, setDescription] = useState(project.description);
   const [teamId, setTeamId] = useState(project.team.id);
-
-  const [startDate, setStartDate] = useState(
-    project.startDate ? new Date(project.startDate).toISOString().split("T")[0] : ""
-  );
-
-  const [endDate, setEndDate] = useState(project.endDate ? new Date(project.endDate).toISOString().split("T")[0] : "");
-
+  const [startDate, setStartDate] = useState(formatDate(project.startDate));
+  const [endDate, setEndDate] = useState(formatDate(project.endDate));
   const [status, setStatus] = useState(project.status);
   const [error, setError] = useState("");
 
